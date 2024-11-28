@@ -23,14 +23,15 @@ organizado em diretórios, não entregar tudo em um único arquivo .py.
   portas e endereços dos procedimentos remotos disponíveis no servidor.
   Ele deve oferecer os seguintes métodos via RPC:
 
-    * ```register_procedure(procedure_name, address, port)```
-      
+    * `register_procedure(procedure_name, address, port)`
+      ```
       Permite que o servidor registre os métodos RPC disponíveis, associando-os a um
       nome, endereço IP e porta.
-
-    * ```lookup_procedure(procedure_name)```
-    
+      ```
+    * `lookup_procedure(procedure_name)`
+      ```
       Permite que os clientes descubram o endereço e a porta de um procedimento remoto pelo nome.
+      ```
 
 ### Funcionamento do Binder
 
@@ -59,57 +60,43 @@ organizado em diretórios, não entregar tudo em um único arquivo .py.
 
 ### Funcionalidades Disponíveis (Registradas no Binder):
 
-* ```create_room(room_name)```
+* `create_room(room_name)`
+  ```
+  Cria uma nova sala com o nome fornecido. O servidor deve garantir que o nome
+  da sala seja único.
+  ```
+* `join_room(username, room_name)`
+  ```
+  Permite que o usuário entre em uma sala existente. Anuncia a entrada do
+  usuário para todos.
+  Retorna A lista de usuários conectados na sala e as últimas 50 mensagens
+  públicas (broadcast) da sala.
+  ```
+* `send_message(username, room_name, message, recipient=None)`
+  ```
+  Envia uma mensagem pública se recipient=None. Caso contrário, a mensagem é
+  enviada apenas para o destinatário especificado.
+  ```
+* `receive_messages(username, room_name)`
+  ```
+  Retorna todas as mensagens públicas e privadas com recipient=username enviadas
+  para a sala desde a última busca do usuário.
+  ```
+* `list_rooms()`
+  ```
+  Retorna a lista de salas disponíveis no servidor.
+  ```
+* `list_users(room_name)`
+  ```
+  Retorna a lista de usuários conectados em uma sala específica.
+  ```
 
-  Cria uma nova sala com o nome fornecido. O servidor deve garantir que o nome da sala seja único.
+### Remoção de Usuários e Salas
 
-* ```join_room(username, room_name)```
-
-  Permite que o usuário entre em uma sala existente. Anuncia a entrada do usuário para todos.
-  
-  Retorna A lista de usuários conectados na sala e as últimas 50 mensagens públicas (broadcast) da sala.
-
-
-* ```send_message(username, room_name, message, recipient=None)```
-
-Envia
-uma mensagem:
-
-Broadcast:
-Se recipient=None, a mensagem é enviada para todos os usuários na sala.
-Unicast:
-Caso contrário, é enviada apenas para o destinatário especificado.
-
-
-receive_messages(username,
-room_name):
-
-Retorna
-todas as mensagens enviadas para a sala desde a última busca do usuário:
-
-Mensagens
-de broadcast.
-Mensagens
-privadas destinadas ao usuário.
-
-
-list_rooms():
-
-Retorna
-a lista de salas disponíveis no servidor.
-
-list_users(room_name):
-
-Retorna
-a lista de usuários conectados em uma sala específica.
+* Quando um usuário sai de uma sala, ele deve ser removido da lista de usuários conectados.
+* Salas sem usuários conectados podem ser automaticamente removidas após 5 minutos de inatividade.
 
 
-Remoção
-de Usuários e Salas:
+## Cliente
 
-Quando
-um usuário sai de uma sala, ele deve ser removido da lista de usuários
-conectados.
-Salas
-sem usuários conectados podem ser automaticamente removidas após 5
-minutos de inatividade.
+###
