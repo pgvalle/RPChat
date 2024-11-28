@@ -99,4 +99,16 @@ organizado em diretórios, não entregar tudo em um único arquivo .py.
 
 ## Cliente
 
-###
+### Registro de usuário
+
+* O cliente deve permitir que o usuário registre-se com um username único.
+* Caso o nome já esteja em uso, o cliente deve exibir uma mensagem de erro e
+solicitar outro nome.
+
+### Interação com o sistema
+
+O cliente deve permitir:
+
+Criar uma sala: Solicita ao servidor a criação de uma sala com um nome único.
+Entrar em uma sala: Permite entrar em uma sala existente e exibe a lista de
+usuários conectados e as últimas 50 mensagens públicas
