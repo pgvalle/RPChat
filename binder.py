@@ -1,5 +1,5 @@
 from xmlrpc.server import SimpleXMLRPCServer
-
+# TODO Implement my own binder
 # Dicionário para armazenar o serviço e a porta correspondente
 services_registry = {}
 
