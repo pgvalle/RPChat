@@ -1,14 +1,13 @@
 from xmlrpc.server import SimpleXMLRPCServer
 import xmlrpc.client
 import services
+from .. import config
 
-
-HOST, PORT = 'localhost', 12345
 
 if __name__ == '__main__':
     # Configura o servidor
-    server = SimpleXMLRPCServer((HOST, PORT))
-    print('RPChat ready to accept connections')
+    server = SimpleXMLRPCServer((config.HOST, config.HIDDEN_PORT))
+    print('RPChat ready')
 
     # Registra as funções
     server.register_function(services.create_room, 'create_room')
@@ -20,8 +19,8 @@ if __name__ == '__main__':
     server.register_function(services.list_users, 'list_users')
 
     # Registrar o servidor da calculadora no binder
-    binder = xmlrpc.client.ServerProxy(f'http://localhost:{PORT - 1}')
-    binder.register_service('rpchat', PORT)
+    binder = xmlrpc.client.ServerProxy(f'http://{config.HOST}:{config.PORT}')
+    binder.register_service('rpchat', config.HIDDEN_PORT)
 
     # Mantém o servidor em execução
     server.serve_forever()
