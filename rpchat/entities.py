@@ -2,7 +2,6 @@ from . import utils, statcodes
 
 
 class User:
-    '''An inactive user is one that is neither calling get_mgs nor send_msg.'''
 
     MAX_INACTIVE_TIME = 10
     
@@ -17,6 +16,7 @@ class User:
 
 class Room:
 
+    MAX_USERS = 100
     HIST_MAX_SIZE = 50
 
     def __init__(self, name):
@@ -32,13 +32,13 @@ class Room:
         print(f'{self.name}: {msg}')
     
     def join(self, username):
-        '''Returns token that only the client with username=username will know.
-        That token is to ensure that the user is themself.'''
+        if len(self.user_from_name) == Room.MAX_USERS:
+            return statcodes.ROOM_FULL
 
         if username in self.user_from_name:
-            self.log(f'{username} already taken')
+            self.log(f'someone tried to join as {username}')
             return statcodes.USER_EXISTS
-        
+
         user = User(username)
 
         self.user_from_name[user.name] = user
@@ -66,7 +66,7 @@ class Room:
             return statcodes.USER_NOT_FOUND
         
         user = self.user_from_token(usertoken)
-        self.log(f'{user.name} sent a message')
+        self.log(f'{user.name} sent \'{msg}\'')
         # TODO send message right here
 
         return statcodes.SUCCESS
