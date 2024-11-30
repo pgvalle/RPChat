@@ -19,9 +19,6 @@ class Room:
 
     HIST_MAX_SIZE = 50
 
-    def log(self, msg):
-        print(f'{self.name} log: {msg}')
-
     def __init__(self, name):
         self.name = name
         self.history = []
@@ -30,6 +27,9 @@ class Room:
         # redundancy so that all operations are quick
         self.user_from_name = {}
         self.user_from_token = {}
+
+    def log(self, msg):
+        print(f'{self.name}: {msg}')
     
     def join(self, username):
         '''Returns token that only the client with username=username will know.
