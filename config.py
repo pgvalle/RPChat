@@ -1,0 +1,1 @@
+HOST, PORT, HIDDEN_PORT = 'localhost', 12345, 12346
