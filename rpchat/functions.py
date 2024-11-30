@@ -58,5 +58,4 @@ def list_users(roomname):
         return statcodes.ROOM_NOT_FOUND
     
     room = room_registry[roomname]
-    userlist = room.list_users()
-    return ' '.join(userlist)
+    return room.list_users()

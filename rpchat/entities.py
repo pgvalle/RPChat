@@ -17,7 +17,7 @@ class User:
 class Room:
 
     MAX_USERS = 100
-    HIST_MAX_SIZE = 50
+    HIST_SIZE = 50
 
     def __init__(self, name):
         self.name = name
