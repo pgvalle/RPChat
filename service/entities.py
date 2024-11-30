@@ -1,4 +1,4 @@
-import utils
+from . import utils
 
 
 class User:
@@ -19,6 +19,9 @@ class Room:
 
     HIST_MAX_SIZE = 50
 
+    def log(self, msg):
+        print(f'{self.name} log: {msg}')
+
     def __init__(self, name):
         self.name = name
         self.history = []
@@ -33,37 +36,44 @@ class Room:
         That token is to ensure that the user is themself.'''
 
         if not username in self.user_from_name:
-            return None
+            self.log(f'{username} already taken')
+            return ''
         
         user = User(username)
 
         self.user_from_name[user.name] = user
         self.user_from_token[user.token] = user
+        self.log(f'{username} joined')
+
         return user.token
 
     def leave(self, usertoken):
         if not usertoken in self.user_from_token:
-            return None
+            self.log(f'someone that is not in the room tried to leave')
+            return False
         
         user = self.user_from_token(usertoken)
 
         del self.user_from_name[user.name]
         del self.user_from_token[user.token]
-        return user.token
+        self.log(f'{user.name} left')
+
+        return True
 
     def send_msg(self, usertoken, msg, recipient=None):
         if not usertoken in self.user_from_token:
-            return None
+            self.log(f'someone that is not in the room tried to send a message')
+            return False
         
         user = self.user_from_token(usertoken)
-        
+        self.log(f'{user.name} sent a message')
         # TODO send message right here
 
         return True
 
     def recv_msgs(self, usertoken):
         if not usertoken in self.user_from_token:
-            return None
+            return 1
         
         user = self.user_from_token(usertoken)
 
@@ -72,4 +82,4 @@ class Room:
         return []
 
     def list_users(self):
-        return self.user_from_name.keys()
+        return list(self.user_from_name.keys())
