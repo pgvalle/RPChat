@@ -4,69 +4,47 @@ from entts import Room
 room_registry = {}
 
 def create_room(roomname):
-    '''
-    Returns the room token and adm_usertoken if room creation was successful.
-    Otherwise, returns None.
-    '''
-
-    room = room_registry.get(roomname, None)
-
-    if room:
+    if roomname in room_registry:
         return None
     
     room_registry[roomname] = Room(roomname)
     return roomname
 
 def join_room(roomname, username):
-    '''
-    '''
-
-    room = room_registry.get(roomname, None)
-
-    if not room:
+    if not roomname in room_registry:
         return None
 
+    room = room_registry[roomname]
     usertoken = room.join(username)
     return usertoken, room.list_users(), None
 
 def leave_room(roomname, usertoken):
-    '''
-    '''
-
-    room = room_registry.get(roomname, None)
-
-    if not room:
+    if not roomname in room_registry:
         return None
 
+    room = room_registry[roomname]
     return room.leave(usertoken)
 
 def list_rooms():
     return room_registry.keys()
 
 def send_msg(roomname, usertoken, msg, recipient=None):
-    '''
-    Returns True if the message was sent. Otherwise, returns False.
-    '''
-
-    room = room_registry.get(roomname, None)
-
-    if not room:
+    if not roomname in room_registry:
         return False
     
+    room = room_registry[roomname]
     return room.send_msg(usertoken, msg, recipient)
 
-def recv_msgs(roomname, histsize):
-    room = room_registry.get(roomname, None)
-
-    if not room:
+def recv_msgs(roomname, usertoken):
+    if not roomname in room_registry:
         return None
     
-    return room.recv_msgs(histsize)
+    room = room_registry[roomname]
+    return room.recv_msgs(usertoken)
 
 def list_users(roomname):
-    room = room_registry.get(roomname, None)
-
-    if not room:
+    if not roomname in room_registry:
         return None
     
+    room = room_registry[roomname]
     return room.users()
