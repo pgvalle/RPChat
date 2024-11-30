@@ -25,45 +25,50 @@ class Room:
         self.time_inactive = 0
 
         # redundancy so that all operations are quick
-        self.user_from_token = {}
         self.user_from_name = {}
+        self.user_from_token = {}
     
     def join(self, username):
-        '''
-        Returns token that only the client with username=username will know.
-        That prevents a user to maliciously send messages as another one
-        '''
+        '''Returns token that only the client with username=username will know.
+        That token is to ensure that the user is themself.'''
 
         if not username in self.user_from_name:
             return None
         
         user = User(username)
 
-        self.user_from_name[username] = user
+        self.user_from_name[user.name] = user
         self.user_from_token[user.token] = user
         return user.token
 
-    def leave(self, usertoken):       
-        username = self.user_from_name.get(usertoken, None)
-
-        if not username:
+    def leave(self, usertoken):
+        if not usertoken in self.user_from_token:
             return None
+        
+        user = self.user_from_token(usertoken)
 
-        del self.user_from_token[usertoken]
-        del self.user_from_name[username]
-        return usertoken
+        del self.user_from_name[user.name]
+        del self.user_from_token[user.token]
+        return user.token
 
     def send_msg(self, usertoken, msg, recipient=None):
-        username = self.user_from_name.get(usertoken, None)
-
-        if not username:
-            return False
+        if not usertoken in self.user_from_token:
+            return None
+        
+        user = self.user_from_token(usertoken)
         
         # TODO send message right here
 
         return True
 
     def recv_msgs(self, usertoken):
+        if not usertoken in self.user_from_token:
+            return None
+        
+        user = self.user_from_token(usertoken)
+
+        # TODO implement recv messages
+
         return []
 
     def list_users(self):
