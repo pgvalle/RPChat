@@ -9,7 +9,7 @@ services_registry = {}
 # Função para registrar um serviço no binder
 def register_procedure(servicename, port):
     services_registry[servicename] = port
-    print(f'Serviço {servicename} registered in {port}')
+    print(f'Service {servicename} registered in {port}')
     return True
 
 
