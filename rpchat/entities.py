@@ -1,4 +1,4 @@
-from . import utils
+from . import utils, statcodes
 
 
 class User:
@@ -35,9 +35,9 @@ class Room:
         '''Returns token that only the client with username=username will know.
         That token is to ensure that the user is themself.'''
 
-        if not username in self.user_from_name:
+        if username in self.user_from_name:
             self.log(f'{username} already taken')
-            return ''
+            return statcodes.USER_EXISTS
         
         user = User(username)
 
@@ -50,7 +50,7 @@ class Room:
     def leave(self, usertoken):
         if not usertoken in self.user_from_token:
             self.log(f'someone that is not in the room tried to leave')
-            return False
+            return statcodes.USER_NOT_FOUND
         
         user = self.user_from_token(usertoken)
 
@@ -58,22 +58,22 @@ class Room:
         del self.user_from_token[user.token]
         self.log(f'{user.name} left')
 
-        return True
+        return statcodes.SUCCESS
 
     def send_msg(self, usertoken, msg, recipient=None):
         if not usertoken in self.user_from_token:
             self.log(f'someone that is not in the room tried to send a message')
-            return False
+            return statcodes.USER_NOT_FOUND
         
         user = self.user_from_token(usertoken)
         self.log(f'{user.name} sent a message')
         # TODO send message right here
 
-        return True
+        return statcodes.SUCCESS
 
     def recv_msgs(self, usertoken):
         if not usertoken in self.user_from_token:
-            return 1
+            return statcodes.USER_NOT_FOUND
         
         user = self.user_from_token(usertoken)
 

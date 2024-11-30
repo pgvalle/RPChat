@@ -13,6 +13,6 @@ if __name__ == "__main__":
     # Cria um cliente que se conecta ao servidor de calculadora na porta descoberta
     rpchat = xmlrpc.client.ServerProxy(f'http://localhost:{rpchat_port}')
     rpchat.create_room('babolei')
-    token = rpchat.join_room('babolei', 'jacan')
-    print(token)
-    rpchat.leave_room(token)
+    result = rpchat.join_room('babolei', 'jacan')
+    print(result)
+    #rpchat.leave_room('babolei', result)
