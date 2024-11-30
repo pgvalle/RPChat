@@ -6,7 +6,7 @@ from .. import config
 
 if __name__ == '__main__':
     # Configura o servidor
-    server = SimpleXMLRPCServer((config.HOST, config.HIDDEN_PORT))
+    server = SimpleXMLRPCServer((config.HOST, config.PORT - 1))
     print('RPChat ready')
 
     # Registra as funções
@@ -20,7 +20,7 @@ if __name__ == '__main__':
 
     # Registrar o servidor da calculadora no binder
     binder = xmlrpc.client.ServerProxy(f'http://{config.HOST}:{config.PORT}')
-    binder.register_service('rpchat', config.HIDDEN_PORT)
+    binder.register_service('rpchat', config.PORT - 1)
 
     # Mantém o servidor em execução
     server.serve_forever()
