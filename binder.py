@@ -1,28 +1,34 @@
 from xmlrpc.server import SimpleXMLRPCServer
+import config
+
 # TODO Implement my own binder
 # Dicionário para armazenar o serviço e a porta correspondente
 services_registry = {}
 
 
 # Função para registrar um serviço no binder
-def register_service(service_name, port):
-    services_registry[service_name] = port
-    print(f"Serviço {service_name} registrado na porta {port}")
+def register_procedure(servicename, port):
+    services_registry[servicename] = port
+    print(f'Serviço {servicename} registered in {port}')
     return True
 
 
 # Função para descobrir a porta de um serviço
-def discover_service(service_name):
-    return services_registry.get(service_name, None)
+def lookup_procedure(servicename):
+    return services_registry.get(servicename, None)
 
 
-# Cria o servidor XML-RPC para o binder
-binder_server = SimpleXMLRPCServer(('localhost', 65431))
-print("Binder pronto e aguardando registros...")
+if __name__ == '__main__':
+    # Cria o servidor XML-RPC para o binder
+    binder_server = SimpleXMLRPCServer((config.HOST, config.PORT))
+    print('Binder waiting for new registrations')
 
-# Registra as funções
-binder_server.register_function(register_service, "register_service")
-binder_server.register_function(discover_service, "discover_service")
+    # Registra as funções
+    binder_server.register_function(register_procedure, 'register_procedure')
+    binder_server.register_function(lookup_procedure, 'lookup_procedure')
 
-# Mantém o servidor em execução
-binder_server.serve_forever()
+    try:
+        # Mantém o servidor em execução
+        binder_server.serve_forever()
+    except KeyboardInterrupt:
+        print('bye')
