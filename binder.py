@@ -1,34 +1,52 @@
 from xmlrpc.server import SimpleXMLRPCServer
-import config
+import rpchat
+import sys
 
-# TODO Implement my own binder
-# Dicionário para armazenar o serviço e a porta correspondente
+
 services_registry = {}
 
 
-# Função para registrar um serviço no binder
-def register_procedure(servicename, port):
-    services_registry[servicename] = port
-    print(f'Service {servicename} registered in {port}')
+def register_procedure(servicename, host, port):
+    services_registry[servicename] = (host, port)
+    print(f'Service {servicename} registered at {host}:{port}')
     return True
 
 
-# Função para descobrir a porta de um serviço
 def lookup_procedure(servicename):
     return services_registry.get(servicename, None)
 
 
-if __name__ == '__main__':
-    # Cria o servidor XML-RPC para o binder
-    binder_server = SimpleXMLRPCServer((config.HOST, config.PORT))
-    print('Binder waiting for new registrations')
+def main():
+    if len(sys.argv) < 3:
+        print('Expected host and port')
+        return
+    
+    # cli arguments parsing
+    host, port = None, None
+    try:
+        host, port = sys.argv[1], int(sys.argv[2])
+    except Exception as e:
+        print(f'Error when parsing arguments: {e}')
 
-    # Registra as funções
+    # Create XML-RPC server for binder
+    binder_server = None
+    try:
+        binder_server = SimpleXMLRPCServer((host, port))
+    except Exception as e:
+        print(f'Error when creating server: {e}')
+
+    # register functions
     binder_server.register_function(register_procedure, 'register_procedure')
     binder_server.register_function(lookup_procedure, 'lookup_procedure')
 
+    print(f'Binder ready at {host}:{port}')
+
+    # keep binder running
     try:
-        # Mantém o servidor em execução
         binder_server.serve_forever()
     except KeyboardInterrupt:
         print('bye')
+
+
+if __name__ == '__main__':
+    main()

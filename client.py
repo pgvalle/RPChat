@@ -7,7 +7,7 @@ if __name__ == "__main__":
     rpchat_port = binder.lookup_procedure('rpchat')
 
     if rpchat_port is None:
-        print("Serviço de calculadora não encontrado.")
+        print('This service was not registered')
         exit(1)
 
     # Cria um cliente que se conecta ao servidor de calculadora na porta descoberta
