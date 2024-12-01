@@ -22,18 +22,18 @@ def main():
         return
     
     # cli arguments parsing
-    host, port = None, None
     try:
         host, port = sys.argv[1], int(sys.argv[2])
     except Exception as e:
         print(f'Error when parsing arguments: {e}')
+        return
 
     # Create XML-RPC server for binder
-    binder_server = None
     try:
-        binder_server = SimpleXMLRPCServer((host, port))
+        binder_server = SimpleXMLRPCServer((host, port), logRequests=False)
     except Exception as e:
         print(f'Error when creating server: {e}')
+        return
 
     # register functions
     binder_server.register_function(register_procedure, 'register_procedure')
@@ -46,6 +46,8 @@ def main():
         binder_server.serve_forever()
     except KeyboardInterrupt:
         print('bye')
+
+    binder_server.server_close()
 
 
 if __name__ == '__main__':
