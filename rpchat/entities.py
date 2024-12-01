@@ -1,9 +1,7 @@
-from . import utils, statcodes
+from . import utils, statcodes, config
 
 
 class User:
-
-    MAX_INACTIVE_TIME = 10
     
     def __init__(self, name):
         self.name = name
@@ -11,13 +9,10 @@ class User:
         self.time_inactive = 0
     
     def should_be_kicked(self):
-        return self.time_inactive >= User.MAX_INACTIVE_TIME
+        return self.time_inactive >= config.USER_MAX_TIME_INACTIVE
 
 
 class Room:
-
-    MAX_USERS = 100
-    HIST_SIZE = 50
 
     def __init__(self, name):
         self.name = name
@@ -32,7 +27,7 @@ class Room:
         print(f'{self.name}: {msg}')
     
     def join(self, username):
-        if len(self.user_from_name) == Room.MAX_USERS:
+        if len(self.user_from_name) == config.ROOM_MAX_USERS:
             return statcodes.ROOM_FULL
 
         if username in self.user_from_name:

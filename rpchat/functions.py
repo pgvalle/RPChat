@@ -1,7 +1,5 @@
-from . import entities, statcodes
+from . import entities, statcodes, config
 
-
-MAX_ROOMS = 1000
 
 room_registry = {}
 
@@ -10,7 +8,7 @@ def create_room(roomname):
     if roomname in room_registry:
         return statcodes.ROOM_EXISTS
     
-    if len(room_registry) == MAX_ROOMS:
+    if len(room_registry) == config.MAX_ROOMS:
         return statcodes.ROOM_REGISTRY_FULL
 
     room_registry[roomname] = entities.Room(roomname)
