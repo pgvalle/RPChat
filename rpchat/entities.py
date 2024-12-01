@@ -47,7 +47,7 @@ class Room:
             self.log(f'someone that is not in the room tried to leave')
             return statcodes.USER_NOT_FOUND
         
-        user = self.user_from_token(usertoken)
+        user = self.user_from_token[usertoken]
 
         del self.user_from_name[user.name]
         del self.user_from_token[user.token]
@@ -60,7 +60,8 @@ class Room:
             self.log(f'someone that is not in the room tried to send a message')
             return statcodes.USER_NOT_FOUND
         
-        user = self.user_from_token(usertoken)
+        user = self.user_from_token[usertoken]
+    
         self.log(f'{user.name} sent \'{msg}\'')
         # TODO send message right here
 
@@ -70,7 +71,7 @@ class Room:
         if not usertoken in self.user_from_token:
             return statcodes.USER_NOT_FOUND
         
-        user = self.user_from_token(usertoken)
+        user = self.user_from_token[usertoken]
 
         # TODO implement recv messages
 
