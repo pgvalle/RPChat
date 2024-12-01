@@ -10,8 +10,10 @@ def create_room(roomname):
     
     if len(room_registry) == config.MAX_ROOMS:
         return statcodes.ROOM_REGISTRY_FULL
-
+    
     room_registry[roomname] = entities.Room(roomname)
+    print(f'room {roomname} created')
+
     return statcodes.SUCCESS
 
 
