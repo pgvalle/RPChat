@@ -1,5 +1,5 @@
 from xmlrpc.server import SimpleXMLRPCServer
-import rpchat
+import chatsrv
 import sys
 
 

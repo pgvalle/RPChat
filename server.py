@@ -1,6 +1,6 @@
 from xmlrpc.server import SimpleXMLRPCServer
 import xmlrpc.client
-import rpchat
+import chatsrv
 import sys
 
 
@@ -26,12 +26,12 @@ def main():
         print(f'Error when creating server: {e}')
         return
     
-    server.register_function(rpchat.create_room, 'create_room')
-    server.register_function(rpchat.join_room, 'join_room')
-    server.register_function(rpchat.list_rooms, 'list_rooms')
-    server.register_function(rpchat.send_msg, 'send_msg')
-    server.register_function(rpchat.recv_msgs, 'recv_msgs')
-    server.register_function(rpchat.list_users, 'list_users')
+    server.register_function(chatsrv.create_room, 'create_room')
+    server.register_function(chatsrv.join_room, 'join_room')
+    server.register_function(chatsrv.list_rooms, 'list_rooms')
+    server.register_function(chatsrv.send_msg, 'send_msg')
+    server.register_function(chatsrv.recv_msgs, 'recv_msgs')
+    server.register_function(chatsrv.list_users, 'list_users')
 
     # configure connection to binder
     try:
