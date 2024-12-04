@@ -19,7 +19,7 @@ def main():
         print(f'Error when parsing arguments: {e}')
         return
 
-    # configure server
+    # create and configure server
     try:
         server = SimpleXMLRPCServer((server_host, server_port), logRequests=False)
     except Exception as e:

@@ -1,7 +1,6 @@
 from . import statcodes, config
 import datetime
 
-
 class Room:
 
     def __init__(self, name):
