@@ -3,14 +3,9 @@ import sys
 
 services = {}
 
-def register_service(name, host, port):
+def register_service(name, host, port):   
     services[name] = (host, port)
-    print(f'Service {name} registered at {host}:{port}')
-    return True
-
-def unregister_service(name):
-    if name in services:
-        del services[name]
+    print(f'registered service {name} at {host}:{port}')
 
 def find_service(name):
     return services.get(name, None)
@@ -36,7 +31,6 @@ def main():
 
     # register functions
     binder_server.register_function(register_service, 'register_service')
-    binder_server.register_function(unregister_service, 'unregister_service')
     binder_server.register_function(find_service, 'find_service')
 
     print(f'Binder ready at {host}:{port}')
