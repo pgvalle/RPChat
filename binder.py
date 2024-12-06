@@ -6,6 +6,7 @@ services = {}
 def register_service(name, host, port):   
     services[name] = (host, port)
     print(f'registered service {name} at {host}:{port}')
+    return True
 
 def find_service(name):
     return services.get(name, None)
