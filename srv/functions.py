@@ -3,13 +3,13 @@ from . import config
 from .entities import *
 
 def is_connection_valid(roomname, username, auth_token):
-    if not roomname in rooms_by_name:
+    if not roomname in rooms:
         return statcodes.ROOM_NOT_FOUND
 
-    if not username in users_by_name:
+    if not username in users:
         return statcodes.USER_NOT_FOUND
 
-    user = users_by_name[username]
+    user = users[username]
 
     if user.auth_token != auth_token:
         return statcodes.USER_SESSION_ERROR
@@ -26,44 +26,40 @@ def register_user(username, password):
     if not User.is_password_valid(password):
         return statcodes.INVALID_PASSWORD
 
-    if username in users_by_name:
+    if username in users:
         return statcodes.USER_EXISTS
     
-    if len(users_by_name) == config.MAX_USERS:
+    if len(users) == config.MAX_USERS:
         return statcodes.USER_REGISTRY_FULL
 
-    users_lock.acquire()
-    users_by_name[username] = User(username, password)
+    users[username] = User(username, password)
     print(f'New user {username} registered')
-    users_lock.release()
 
     return statcodes.SUCCESS
 
 def unregister_user(username, password):
-    if not User.is_name_valid(username) or not username in users_by_name:
+    if not User.is_name_valid(username) or not username in users:
         return statcodes.USER_NOT_FOUND
     
-    user = users_by_name[username]
+    user = users[username]
     
     if user.password != password:
         return statcodes.WRONG_PASSWORD
     
     # for each room the user is, delete them from its userlist
-    for _, room in user.rooms_by_name:
-        del room.users_by_name[username]
+    for _, room in user.rooms:
+        del room.users[username]
 
-    users_lock.acquire()
-    del users_by_name[username] # remove user from global user registry
+    del users[username] # remove user from global user registry
     print(f'User {username} unregistered')
-    users_lock.release()
 
     return statcodes.SUCCESS
 
 def login(username, password):
-    if not username in users_by_name:
+    if not username in users:
         return statcodes.USER_NOT_FOUND
     
-    user = users_by_name[username]
+    user = users[username]
 
     if user.password != password:
         return statcodes.WRONG_PASSWORD
@@ -80,28 +76,26 @@ def create_room(roomname):
     if not Room.is_name_valid(roomname):
         return statcodes.INVALID_ROOMNAME
 
-    if roomname in rooms_by_name:
+    if roomname in rooms:
         return statcodes.ROOM_EXISTS
     
-    if len(rooms_by_name) == config.MAX_ROOMS:
+    if len(rooms) == config.MAX_ROOMS:
         return statcodes.ROOM_REGISTRY_FULL
 
-    rooms_lock.acquire()
-    rooms_by_name[roomname] = Room()
+    rooms[roomname] = Room()
     print(f'Room {roomname} created')
-    rooms_lock.release()
 
     return statcodes.SUCCESS
 
 def list_users_in_room(roomname):
-    if not roomname in rooms_by_name:
+    if not roomname in rooms:
         return statcodes.ROOM_NOT_FOUND
     
-    room = rooms_by_name[roomname]
-    return list(room.users_by_name.keys())
+    room = rooms[roomname]
+    return list(room.users.keys())
 
 def list_rooms():
-    return list(rooms_by_name.keys())
+    return list(rooms.keys())
 
 # USER AND ROOM STUFF
 #########################################################
@@ -112,25 +106,26 @@ def join_room(roomname, username, auth_token):
     if result != statcodes.SUCCESS:
         return result
     
-    user = users_by_name[username]
-    room = rooms_by_name[roomname]
+    user = users[username]
+    room = rooms[roomname]
 
-    if username in room.users_by_name:
+    if username in room.users:
         return statcodes.USER_EXISTS
 
-    room.users_by_name[username] = user # add user to room users
-    user.rooms_by_name[roomname] = room # add room to user rooms
+    invalid_date = datetime.datetime(2000, 1, 1)
+    room.users[username] = (user, invalid_date) # add user to room users
+    user.rooms[roomname] = room # add room to user rooms
     print(f'{username} joined {roomname}')
 
-    users_in_room = list(room.users_by_name.keys())
     last_50_messages = []
-
     i = len(room.messages) - 1
+
     while i >= 0 and len(room.messages) - i <= 50:
         dest = room.messages[i][3]
         if dest is None:
             last_50_messages.append(room.messages[i])
 
+    users_in_room = list(room.users.keys())
     return users_in_room, last_50_messages
 
 def leave_room(roomname, username, auth_token):
@@ -139,14 +134,14 @@ def leave_room(roomname, username, auth_token):
     if result != statcodes.SUCCESS:
         return result
     
-    user = users_by_name[username]
-    room = rooms_by_name[roomname]
+    user = users[username]
+    room = rooms[roomname]
 
-    if not username in room.users_by_name:
+    if not username in room.users_and_dates:
         return statcodes.USER_NOT_FOUND
 
-    del room.users_by_name[username] # remove user from room users
-    del user.rooms_by_name[roomname] # remove room from user rooms
+    del room.users_and_dates[username] # remove user from room users
+    del user.rooms[roomname] # remove room from user rooms
     return statcodes.SUCCESS
 
 def send_message(roomname, username, auth_token, message, recipient=None):
@@ -155,12 +150,12 @@ def send_message(roomname, username, auth_token, message, recipient=None):
     if result != statcodes.SUCCESS:
         return result
     
-    room = rooms_by_name[roomname]
+    room = rooms[roomname]
 
-    if not username in room.users_by_name:
+    if not username in room.users_and_dates:
         return statcodes.USER_NOT_FOUND
     
-    if not recipient in room.users_by_name:
+    if not recipient in room.users_and_dates:
         return statcodes.RECIPIENT_NOT_FOUND
     
     room.send_message(username, message, recipient)
@@ -171,14 +166,25 @@ def receive_messages(roomname, username, auth_token):
     
     if result != statcodes.SUCCESS:
         return result
-    
-    user = users_by_name[username]
-    room = rooms_by_name[roomname]
 
-    if not username in room.users_by_name:
+    room = rooms[roomname]
+
+    if not username in room.users_and_dates:
         return statcodes.USER_NOT_FOUND
     
-    return -1234512893
+    _, adate = room.users_and_dates[username]
+    last_messages = []
+    i = len(room.messages) - 1
+
+    while i >= 0:
+        date = room.messages[i][0]
+
+        if adate >= date: # may cause trouble bc of >=
+            break
+
+        last_messages.append(room.messages[i])
+
+    return last_messages
     
 
 '''

@@ -3,7 +3,7 @@ import uuid, datetime, threading
 class User:
 
     def __init__(self, name, password):
-        self.rooms_by_name = {}
+        self.rooms = {}
         self.name = name
         self.password = password
         self.auth_token = 0
@@ -24,14 +24,13 @@ class User:
     def is_password_valid(password):
         return True
     
-# store registered users_by_name and their tokens
-users_by_name = {}
-users_lock = threading.Lock()
+# store registered users and their tokens
+users = {}
 
 class Room:
 
     def __init__(self):
-        self.users_by_name = {}
+        self.users_and_dates = {}
         self.messages = []
         self.time_inactive = 0
 
@@ -43,6 +42,5 @@ class Room:
     def is_name_valid(name):
         return True
     
-# store rooms_by_name
-rooms_by_name = {}
-rooms_lock = threading.Lock()
+# store rooms
+rooms = {}
