@@ -1,8 +1,7 @@
 from xmlrpc.server import SimpleXMLRPCServer
 import xmlrpc.client
 import os, time, threading
-from . import config, functions
-from .entities import rooms_lock
+from . import config, functions, entities
 
 exit_evt = threading.Event()
 
@@ -13,16 +12,12 @@ def load_users():
 # delete rooms after max inactivity time has passed
 def refresh_rooms():
     while not exit_evt.is_set():
-        rooms_lock.acquire()
-
-        for name in functions.rooms_by_name.keys():
-            room = functions.rooms_by_name[name]
+        for name in entities.rooms.keys():
+            room = entities.rooms[name]
 
             room.time_inactive += 2
             if room.time_inactive >= config.ROOM_MAX_TIME_INACTIVE:
-                del functions.rooms_by_name[name]
-
-        rooms_lock.release()
+                del entities.rooms[name]
 
         time.sleep(2)
 
