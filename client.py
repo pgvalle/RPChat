@@ -10,8 +10,11 @@ def main():
 
     # Cria um cliente que se conecta ao servidor de calculadora na porta descoberta
     rpchat = xmlrpc.client.ServerProxy(f'http://{host}:{port}')
+    rpchat.create_room('adam')
+    rpchat.register_user('adam', '123')
     tk = rpchat.login('adam', '123')
     print(tk)
-    print(rpchat.join_room('world', 'sadfsdf', tk))
+
+    rpchat.join_room('world', 'adam', tk)
 
 main()

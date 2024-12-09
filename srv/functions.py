@@ -51,7 +51,7 @@ def unregister_user(username, password):
         del room.users_and_dates[username]
 
     del users[username] # remove user from global user registry
-    print(f'User {username} unregistered')
+    print(f'user {username} unregistered')
 
     return statcodes.SUCCESS
 
@@ -115,7 +115,7 @@ def join_room(roomname, username, auth_token):
     invalid_date = datetime.datetime(2000, 1, 1)
     room.users_and_dates[username] = (user, invalid_date) # add user to room users
     user.rooms[roomname] = room # add room to user rooms
-    print(f'{username} joined {roomname}')
+    print(f'user {username} joined {roomname}')
 
     last_50_messages = []
     i = len(room.messages) - 1
