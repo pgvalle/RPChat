@@ -48,7 +48,7 @@ def unregister_user(username, password):
     
     # for each room the user is, delete them from its userlist
     for _, room in user.rooms:
-        del room.users[username]
+        del room.users_and_dates[username]
 
     del users[username] # remove user from global user registry
     print(f'User {username} unregistered')
@@ -66,7 +66,7 @@ def login(username, password):
 
     # everytime the client calls login, generate a new auth_token
     # It invalidates any other token created previously
-    print(f'User {username} created a new session')
+    print(f'User {username} refreshed their token')
     return user.refresh_auth_token()
 
 # ROOM STUFF
@@ -92,7 +92,7 @@ def list_users_in_room(roomname):
         return statcodes.ROOM_NOT_FOUND
     
     room = rooms[roomname]
-    return list(room.users.keys())
+    return list(room.users_and_dates.keys())
 
 def list_rooms():
     return list(rooms.keys())
@@ -109,11 +109,11 @@ def join_room(roomname, username, auth_token):
     user = users[username]
     room = rooms[roomname]
 
-    if username in room.users:
+    if username in room.users_and_dates:
         return statcodes.USER_EXISTS
 
     invalid_date = datetime.datetime(2000, 1, 1)
-    room.users[username] = (user, invalid_date) # add user to room users
+    room.users_and_dates[username] = (user, invalid_date) # add user to room users
     user.rooms[roomname] = room # add room to user rooms
     print(f'{username} joined {roomname}')
 
@@ -125,7 +125,7 @@ def join_room(roomname, username, auth_token):
         if dest is None:
             last_50_messages.append(room.messages[i])
 
-    users_in_room = list(room.users.keys())
+    users_in_room = list(room.users_and_dates.keys())
     return users_in_room, last_50_messages
 
 def leave_room(roomname, username, auth_token):
