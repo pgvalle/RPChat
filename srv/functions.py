@@ -33,12 +33,12 @@ def register_user(username, password):
         return statcodes.USER_REGISTRY_FULL
 
     users[username] = User(username, password)
-    print(f'New user {username} registered')
+    print(f'new user {username} registered')
 
     return statcodes.SUCCESS
 
 def unregister_user(username, password):
-    if not User.is_name_valid(username) or not username in users:
+    if not username in users:
         return statcodes.USER_NOT_FOUND
     
     user = users[username]
@@ -66,7 +66,7 @@ def login(username, password):
 
     # everytime the client calls login, generate a new auth_token
     # It invalidates any other token created previously
-    print(f'User {username} refreshed their token')
+    print(f'user {username} refreshed their token')
     return user.refresh_auth_token()
 
 # ROOM STUFF
@@ -113,8 +113,8 @@ def join_room(roomname, username, auth_token):
         return statcodes.USER_EXISTS
 
     invalid_date = datetime.datetime(2000, 1, 1)
-    room.users_and_dates[username] = (user, invalid_date) # add user to room users
     user.rooms[roomname] = room # add room to user rooms
+    room.users_and_dates[username] = (user, invalid_date) # add user to room users
     print(f'user {username} joined {roomname}')
 
     last_50_messages = []

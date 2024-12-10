@@ -13,9 +13,17 @@ def load_users():
 def refresh_rooms():
     while not exit_evt.is_set():
         for name in entities.rooms.keys():
+            if name == 'world':
+                continue
+
             room = entities.rooms[name]
 
+            if len(room.users) > 0:
+                room.time_inactive = 0
+                continue
+
             room.time_inactive += 2
+
             if room.time_inactive >= config.ROOM_MAX_TIME_INACTIVE:
                 del entities.rooms[name]
 
