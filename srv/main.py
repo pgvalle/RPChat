@@ -1,17 +1,15 @@
 from xmlrpc.server import SimpleXMLRPCServer
 import xmlrpc.client
-import os, time, threading
+import time, threading
 from . import config, functions, entities
 
 exit_evt = threading.Event()
 
-def load_users():
-    if os.path.exists('users.dat'):
-        pass
-
 # delete rooms after max inactivity time has passed
 def refresh_rooms():
     while not exit_evt.is_set():
+        before = time.perf_counter()
+
         for name in entities.rooms.keys():
             if name == 'world':
                 continue
@@ -21,13 +19,15 @@ def refresh_rooms():
             if len(room.users) > 0:
                 room.time_inactive = 0
                 continue
-
-            room.time_inactive += 2
+            else:
+                room.time_inactive += 2
 
             if room.time_inactive >= config.ROOM_MAX_TIME_INACTIVE:
                 del entities.rooms[name]
 
-        time.sleep(2)
+        delta = time.perf_counter() - before
+        if delta < 2:
+            time.sleep(2 - delta)
 
 def main():
     functions.create_room('world')
