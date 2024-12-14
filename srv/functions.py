@@ -2,17 +2,17 @@ from . import statcodes
 from . import config
 from .entities import *
 
-def is_connection_valid(roomname, username, auth_token):
+def is_connection_valid(roomname, username, password):
     if not roomname in rooms:
         return statcodes.ROOM_NOT_FOUND
 
     if not username in users:
         return statcodes.USER_NOT_FOUND
-
+    
     user = users[username]
 
-    if user.auth_token != auth_token:
-        return statcodes.USER_SESSION_ERROR
+    if not user.password == password:
+        return statcodes.WRONG_PASSWORD
     
     return statcodes.SUCCESS
 
@@ -55,7 +55,7 @@ def unregister_user(username, password):
 
     return statcodes.SUCCESS
 
-def login(username, password):
+def check(username, password):
     if not username in users:
         return statcodes.USER_NOT_FOUND
     
@@ -64,10 +64,7 @@ def login(username, password):
     if user.password != password:
         return statcodes.WRONG_PASSWORD
 
-    # everytime the client calls login, generate a new auth_token
-    # It invalidates any other token created previously
-    print(f'user {username} refreshed their token')
-    return user.refresh_auth_token()
+    return statcodes.SUCCESS
 
 # ROOM STUFF
 #########################################################
@@ -100,8 +97,8 @@ def list_rooms():
 # USER AND ROOM STUFF
 #########################################################
 
-def join_room(roomname, username, auth_token):
-    result = is_connection_valid(roomname, username, auth_token)
+def join_room(roomname, username, password):
+    result = is_connection_valid(roomname, username, password)
     
     if result != statcodes.SUCCESS:
         return result
@@ -110,12 +107,13 @@ def join_room(roomname, username, auth_token):
     room = rooms[roomname]
 
     if username in room.users_and_dates:
-        return statcodes.USER_EXISTS
+        print(f'user {username} rejoined {roomname}')
+    else:
+        invalid_date = datetime.datetime(2000, 1, 1)
 
-    invalid_date = datetime.datetime(2000, 1, 1)
-    user.rooms[roomname] = room # add room to user rooms
-    room.users_and_dates[username] = (user, invalid_date) # add user to room users
-    print(f'user {username} joined {roomname}')
+        room.users_and_dates[username] = (user, invalid_date)
+        user.rooms[roomname] = room
+        print(f'user {username} joined {roomname}')
 
     last_50_messages = []
     i = len(room.messages) - 1
@@ -126,10 +124,11 @@ def join_room(roomname, username, auth_token):
             last_50_messages.append(room.messages[i])
 
     users_in_room = list(room.users_and_dates.keys())
+
     return users_in_room, last_50_messages
 
-def leave_room(roomname, username, auth_token):
-    result = is_connection_valid(roomname, username, auth_token)
+def leave_room(roomname, username, password):
+    result = is_connection_valid(roomname, username, password)
     
     if result != statcodes.SUCCESS:
         return result
@@ -144,8 +143,8 @@ def leave_room(roomname, username, auth_token):
     del user.rooms[roomname] # remove room from user rooms
     return statcodes.SUCCESS
 
-def send_message(roomname, username, auth_token, message, recipient=None):
-    result = is_connection_valid(roomname, username, auth_token)
+def send_message(roomname, username, password, message, recipient=None):
+    result = is_connection_valid(roomname, username, password)
     
     if result != statcodes.SUCCESS:
         return result
@@ -161,8 +160,8 @@ def send_message(roomname, username, auth_token, message, recipient=None):
     room.send_message(username, message, recipient)
     return statcodes.SUCCESS
 
-def receive_messages(roomname, username, auth_token):
-    result = is_connection_valid(roomname, username, auth_token)
+def receive_messages(roomname, username, password):
+    result = is_connection_valid(roomname, username, password)
     
     if result != statcodes.SUCCESS:
         return result
@@ -185,17 +184,3 @@ def receive_messages(roomname, username, auth_token):
         last_messages.append(room.messages[i])
 
     return last_messages
-    
-
-'''
-`join_room(username, room_name)`
-  ```
-  Permite que o usuário entre em uma sala existente. Anuncia a entrada do usuário para todos.
-  Retorna A lista de usuários conectados na sala e as últimas 50 mensagens públicas (broadcast) da sala.
-  ```
-* `send_message(username, room_name, message, recipient=None)`
-  ```
-  Envia uma mensagem pública se recipient=None. Caso contrário, a mensagem é enviada apenas para o destinatário especificado.
-  ```
-* `receive_messages(username, room_name)`
-'''

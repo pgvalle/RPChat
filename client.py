@@ -19,8 +19,22 @@ root.resizable(False, False)
 
 style = ttk.Style(root)
 
+rooms_windows = []
+username, password = tk.StringVar(), tk.StringVar()
 
-def user_screen(user, token):
+
+def room_window(roomname):
+    room_root = tk.Toplevel(root)
+    room_root.title(f'{roomname}')
+    room_root.resizable(False, False)
+
+    rooms_windows.append(room_root)
+
+    screen = ttk.Frame(room_root)
+    screen.pack(fill='both')
+
+
+def user_screen():
     screen = ttk.Frame(root)
     screen.pack(fill='both')
 
@@ -44,9 +58,12 @@ def user_screen(user, token):
 
     def logout():
         screen.destroy()
+        for room_window in rooms_windows:
+            room_window.destroy()
+
         main_screen()
 
-    login_label = ttk.Label(user_frame, text=f'Logged as {user}')
+    login_label = ttk.Label(user_frame, text=f'Logged as {username.get()}')
     logout_btn = ttk.Button(user_frame, text='logout', command=logout)
 
     # positioning widgets inside userframe
@@ -75,8 +92,18 @@ def user_screen(user, token):
         rooms_listbox.insert(0, rooms)
         rooms_listbox.select_set(i)
 
+    def join_room():
+        roomname = room_entry.get()
+        result = rpchat.join_room(roomname, username.get(), password.get())
+
+        if isinstance(result, int):
+            msgbox.showerror(message=f'Error {result}')
+        else:
+            room_window(roomname)
+
+
     create_btn = ttk.Button(room_actions_frame, text='create', command=None)
-    join_btn = ttk.Button(room_actions_frame, text='join', command=None)
+    join_btn = ttk.Button(room_actions_frame, text='join', command=join_room)
     refresh_list_btn = ttk.Button(room_actions_frame, text='refresh list', command=refresh_list)
 
     # actions placement inside room actions frame
@@ -103,9 +130,9 @@ def main_screen():
 
     # widgets inside inputs_frame
     user_label = ttk.Label(inputs_frame, text='username:')
-    user_entry = ttk.Entry(inputs_frame)
+    user_entry = ttk.Entry(inputs_frame, textvariable=username)
     pass_label = ttk.Label(inputs_frame, text='password:')
-    pass_entry = ttk.Entry(inputs_frame)
+    pass_entry = ttk.Entry(inputs_frame, show='*', textvariable=password)
     
     # placing user input widgets in inputs frame
     user_label.grid(column=0, row=0)
@@ -118,33 +145,32 @@ def main_screen():
     # actions in actions frame
 
     def login():
-        user = user_entry.get()
-        passw = pass_entry.get()
+        result = rpchat.check(username.get(), password.get())
 
-        result = rpchat.login(user, passw)
-        if isinstance(result, int):
-            msgbox.showerror(message=f'Error {result}')
-        else:
+        if result == 0:
             screen.destroy()
-            user_screen(user, result)
+            user_screen()
+        else:
+            msgbox.showerror(message=f'Error {result}')
 
     def register():
-        user = user_entry.get()
-        passw = pass_entry.get()
+        result = rpchat.register_user(username.get(), password.get())
 
-        result = rpchat.register_user(user, passw)
         if result == 0:
-            msgbox.showinfo(message=f'User {user} registered successfully')
+            # reset fields
+            username.set('')
+            password.set('')
+            msgbox.showinfo(message=f'User {username.get()} registered successfully')
         else:
             msgbox.showerror(message=f'Error {result}')
 
     def unregister():
-        user = user_entry.get()
-        passw = pass_entry.get()
+        result = rpchat.unregister_user(username.get(), password.get())
 
-        result = rpchat.unregister_user(user, passw)
         if result == 0:
-            msgbox.showinfo(message=f'User {user} unregistered successfully')
+            username.set('')
+            password.set('')
+            msgbox.showinfo(message=f'User {username.get()} unregistered successfully')
         else:
             msgbox.showerror(message=f'Error {result}')
 

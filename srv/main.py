@@ -41,7 +41,7 @@ def main():
     
     server.register_function(functions.register_user, 'register_user')
     server.register_function(functions.unregister_user, 'unregister_user')
-    server.register_function(functions.login, 'login')
+    server.register_function(functions.check, 'check')
     server.register_function(functions.create_room, 'create_room')
     server.register_function(functions.list_users_in_room, 'list_users_in_room')
     server.register_function(functions.list_rooms, 'list_rooms')
