@@ -37,7 +37,7 @@ def main():
     refresh_rooms_th = threading.Thread(target=refresh_rooms, daemon=True)
     refresh_rooms_th.start()
 
-    server = SimpleXMLRPCServer(('localhost', 1444), logRequests=False)
+    server = SimpleXMLRPCServer(('127.0.0.1', 1444), logRequests=False)
     
     server.register_function(functions.register_user, 'register_user')
     server.register_function(functions.unregister_user, 'unregister_user')
@@ -50,8 +50,8 @@ def main():
     server.register_function(functions.send_message, 'send_message')
     server.register_function(functions.receive_messages, 'receive_messages')
 
-    binder = xmlrpc.client.ServerProxy(f'http://localhost:1234')
-    binder.register_service('rpchat', 'localhost', 1444)
+    binder = xmlrpc.client.ServerProxy(f'http://127.0.0.1:1234')
+    binder.register_service('rpchat', '127.0.0.1', 1444)
 
     try:
         server.serve_forever()
