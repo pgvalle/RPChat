@@ -1,41 +1,26 @@
-import uuid, datetime, threading
+import datetime
 
 class User:
 
     def __init__(self, name, password):
-        self.rooms = {}
         self.name = name
         self.password = password
+        self.rooms = {}
     
-    def __str__(self):
-        '''To serialize user to file'''
-        return f'{self.name} {self.password}'
-    
-    @staticmethod
-    def is_name_valid(name):
-        return len(name) >= 2 and len(name) <= 16
-    
-    @staticmethod
-    def is_password_valid(password):
-        return len(password) >= 4 and len(password) <= 16
-    
-# store registered users and their tokens
+# store registered users
 users = {}
 
 class Room:
 
-    def __init__(self):
-        self.users_and_dates = {}
+    def __init__(self, name):
+        self.name = name
         self.messages = []
         self.time_inactive = 0
+        self.users = {}
 
-    def send_message(self, orig, content, dest=None):
+    def send_message(self, orig, content, dest):
         now = datetime.datetime.now()
-        self.messages.append((now, orig, content, dest))
-
-    @staticmethod
-    def is_name_valid(name):
-        return len(name) >= 2 and len(name) <= 16
+        self.messages.insert(0, (now, orig, content, dest))
     
 # store rooms
 rooms = {}

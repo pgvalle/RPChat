@@ -1,29 +1,22 @@
 from xmlrpc.server import SimpleXMLRPCServer
 import xmlrpc.client
 import time, threading
-from . import config, functions, entities
+from . import functions, entities
 
-exit_evt = threading.Event()
-
-# delete rooms after max inactivity time has passed
 def refresh_rooms():
-    while not exit_evt.is_set():
+    def is_inactive_5mins(item):
+        name, room = item
+
+        if name == 'world' or len(room.users) > 0:
+            room.time_inactive = 0
+        else:
+            room.time_inactive += 2
+
+        return room.time_inactive < 300
+
+    while True:
         before = time.perf_counter()
-
-        for name in entities.rooms.keys():
-            if name == 'world':
-                continue
-
-            room = entities.rooms[name]
-
-            if len(room.users) > 0:
-                room.time_inactive = 0
-                continue
-            else:
-                room.time_inactive += 2
-
-            if room.time_inactive >= config.ROOM_MAX_TIME_INACTIVE:
-                del entities.rooms[name]
+        entities.rooms = dict(filter(is_inactive_5mins, entities.rooms.items()))
 
         delta = time.perf_counter() - before
         if delta < 2:
@@ -32,16 +25,14 @@ def refresh_rooms():
 def main():
     functions.create_room('world')
 
-    #load_users()
-
     refresh_rooms_th = threading.Thread(target=refresh_rooms, daemon=True)
     refresh_rooms_th.start()
 
-    server = SimpleXMLRPCServer(('127.0.0.1', 1444), logRequests=False)
-    
-    server.register_function(functions.register_user, 'register_user')
-    server.register_function(functions.unregister_user, 'unregister_user')
-    server.register_function(functions.check, 'check')
+    server = SimpleXMLRPCServer(('127.0.0.1', 1444), logRequests=False, allow_none=True)
+
+    server.register_function(functions.create_user, 'create_user')
+    server.register_function(functions.delete_user, 'uncreate_user')
+    server.register_function(functions.check_user, 'check_user')
     server.register_function(functions.create_room, 'create_room')
     server.register_function(functions.list_users_in_room, 'list_users_in_room')
     server.register_function(functions.list_rooms, 'list_rooms')
@@ -50,14 +41,12 @@ def main():
     server.register_function(functions.send_message, 'send_message')
     server.register_function(functions.receive_messages, 'receive_messages')
 
-    binder = xmlrpc.client.ServerProxy(f'http://127.0.0.1:1234')
-    binder.register_service('rpchat', '127.0.0.1', 1444)
+    # binder = xmlrpc.client.ServerProxy(f'http://127.0.0.1:1234')
+    # binder.register_service('rpchat', '127.0.0.1', 1444)
 
     try:
         server.serve_forever()
     except KeyboardInterrupt:
         print('bye')
-
-    exit_evt.set()
-    refresh_rooms_th.join()
-    server.server_close()
+    finally:
+        server.server_close()
