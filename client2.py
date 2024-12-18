@@ -1,12 +1,12 @@
 import xmlrpc.client
 import cli
 
-rpchat = xmlrpc.client.ServerProxy(f'http://127.0.0.1:1444')
+rpchat = xmlrpc.client.ServerProxy(f'http://127.0.0.1:1234')
 
 def main_screen():
     SCREEN_FROM_ACTION = {
-        'c': create_user_screen,
-        'l': lambda: print('not done yet') }
+        'c': user_creation_screen,
+        'l': user_login_screen }
 
     PROMPT = '(c)reate new user, (l)ogin or press ctrl+c twice to quit: '
 
@@ -19,22 +19,35 @@ def main_screen():
             act = input(PROMPT).lower()
         
         screen = SCREEN_FROM_ACTION[act]
-        cli.execute(screen)
+        cli.execute(screen, time_to_compute_quit=0.5)
 
-def create_user_screen():
+def user_login_screen():
+    while True:
+        cli.clear()
+        print('User login')
+        try:
+            username, password = get_credentials()
+            result = rpchat.check(username, password)
+            if result == 0: break
+            else: cli.notify(f'Error {result}')
+        except OSError as e:
+            cli.notify(f'OS Error: {e}')
+        except xmlrpc.client.Fault as e:
+            cli.notify(f'RPC Error: {e}')
+
+def user_creation_screen():
     while True:
         cli.clear()
         print('User creation')
-        result = create_user()
-        if result == 0:
-            break
-
-def create_user():
-    try:
-        username, password = get_credentials()
-        return rpchat.create_user(username, password)
-    except:
-        return -10
+        try:
+            username, password = get_credentials()
+            result = rpchat.create_user(username, password)
+            if result == 0: break
+            else: cli.notify(f'Error {result}')
+        except OSError as e:
+            cli.notify(f'OS Error: {e}')
+        except xmlrpc.client.Fault as e:
+            cli.notify(f'RPC Error: {e}')
     
 def get_credentials():
     username = input('username: ')

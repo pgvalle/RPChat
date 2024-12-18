@@ -18,6 +18,11 @@ def terminate():
     stdout.flush()
     exit(0)
 
+screens = {}
+
+def register_screen(screen, key):
+    screens[key] = screen
+
 def clear():
     stdout.write('\x1bc')
     stdout.flush()
@@ -33,9 +38,11 @@ def notify(text, timestamp=2):
     execute(_notify, time_to_compute_quit=None)
     clear()
 
-def execute(screen, time_to_compute_quit=None):
-    # one KeyboardInterrupt goes back to previous screen
-    try: screen()
+def execute(function, time_to_compute_quit=None):
+    # one KeyboardInterrupt goes back to previous function
+    try:
+        screen = screens[None]
+        screen()
     except KeyboardInterrupt: pass
     
     # two KeyboardInterrupts within time range quit the app
