@@ -1,40 +1,29 @@
 from sys import stdout, stdin
-import platform
+import platform, selectors
 
-_is_windows = platform.system() == 'Windows'
-
-if _is_windows:
-    import msvcrt
-else:
-    import fcntl
+_selector = selectors.DefaultSelector()
 
 def init():
-    if _is_windows:
+    # enable ascii sequences in windows
+    if platform.system() == 'Windows':
         import ctypes
-        # enable ascii sequences
         kernel32 = ctypes.windll.kernel32
         kernel32.SetConsoleMode(kernel32.GetStdHandle(-11), 7)
-    else:
-        import os
-        # unblock stdin
-        fd = stdin.fileno()
-        flags = fcntl.fcntl(fd, fcntl.F_GETFL)
-        fcntl.fcntl(fd, fcntl.F_SETFL, flags | os.O_NONBLOCK)
-    
+
+    _selector.register(stdin, selectors.EVENT_READ)
+
     stdout.write('\x1b[?1049h\x1b[?47h')
     stdout.flush()
 
-def getkey():
-    if _is_windows:
-        if msvcrt.kbhit():  # Check if input is available
-            return msvcrt.getch().decode()  # Return single character
-    else:
-        try:
-            return stdin.read()  # Read available input
-        except IOError:
-            pass
-    
-    return None
+def getkey(timeout=0.1):
+    global selector
+
+    events = _selector.select(timeout)
+    result = ''
+    for key, _ in events:
+        if key.fileobj == stdin:
+            result += key.data
+    return result
 
 def terminate():
     stdout.write('\x1b[?47l\x1b[?1049l')
