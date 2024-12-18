@@ -25,15 +25,14 @@ def parse_cli_args():
 
 def main():
     addr = parse_cli_args()
-
+    
     try:
         binder_server = SimpleXMLRPCServer(addr, logRequests=False, allow_none=True)
+        binder_server.register_function(register_service, 'register_service')
+        binder_server.register_function(find_service, 'find_service')
     except Exception as e:
-        print(f'Error creating binder server: {e}')
-        exit(2)
-
-    binder_server.register_function(register_service, 'register_service')
-    binder_server.register_function(find_service, 'find_service')
+        print(f'Error creating binder: {e}')
+        exit(3)
 
     print(f'Binder ready at {addr}')
 
@@ -41,9 +40,6 @@ def main():
         binder_server.serve_forever()
     except KeyboardInterrupt:
         print('bye')
-    finally:
-        binder_server.server_close()
 
 
-if __name__ == '__main__':
-    main()
+main()

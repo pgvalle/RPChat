@@ -37,14 +37,17 @@ def getkey(timeout=0.002):
 def terminate():
     stdout.write('\x1b[?47l\x1b[?1049l')
     stdout.flush()
+    exit(0)
 
 def clear():
     stdout.write('\x1bc')
     stdout.flush()
 
 def notify(text, timestamp=2):
-    clear()
-    print(text)
+    stdout.write(f'\n{text}')
+    stdout.flush()
+
     import time
-    time.sleep(timestamp)    
+    time.sleep(timestamp)
+
     clear()

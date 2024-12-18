@@ -1,13 +1,7 @@
-import xmlrpc.client
-
-# binder = xmlrpc.client.ServerProxy(f'http://127.0.0.1:1234')
-# host, port = binder.find_service('rpchat')
-# rpchat = xmlrpc.client.ServerProxy(f'http://{host}:{port}')
-binder =None
-host, port = None, None
-rpchat = None
+import xmlrpc.client, sys
 import tui, getpass
 
+rpchat = None
 username, password = '', ''
 
 def handle_options(title, prompt, options):
@@ -34,9 +28,10 @@ def get_credentials():
 def user_options_screen():
     OPTIONS = {
         'c': user_creation_screen,
+        'd': user_deletion_screen,
         'l': user_login_screen,
         'q': lambda: None }
-    PROMPT = '(c)reate user, (l)ogin or (q)uit: '
+    PROMPT = '(c)reate user, (d)elete user, (l)ogin or (q)uit: '
     
     screen = handle_options('User Options', PROMPT, OPTIONS)
     return screen
@@ -50,15 +45,16 @@ def user_login_screen():
     if not username:
         return user_options_screen
 
-    result = 0
+    result = None
 
     try:
         result = rpchat.check_user(username, password)        
     except Exception as e:
         tui.notify(f'Error: {e}')
+        return user_options_screen
 
     if result == 0:
-        return room_options_screen()
+        return room_options_screen
     else:
         tui.notify(f'Error {result}')
 
@@ -66,9 +62,9 @@ def user_login_screen():
 
 def user_creation_screen():
     tui.clear()
-    print('RPChat - User creation')
+    print('RPChat - Create user')
 
-    result = 0
+    result = None
     username, password = get_credentials()
     if not username:
         return user_options_screen
@@ -77,9 +73,32 @@ def user_creation_screen():
         result = rpchat.create_user(username, password)
     except Exception as e:
         tui.notify(f'Error: {e}')
+        return user_options_screen 
 
     if result == 0:
         tui.notify(f'user {username} created')
+    else:
+        tui.notify(f'Error {result}')
+
+    return user_options_screen
+
+def user_deletion_screen():
+    tui.clear()
+    print('RPChat - Delete user')
+
+    result = None
+    username, password = get_credentials()
+    if not username:
+        return user_options_screen
+
+    try:
+        result = rpchat.delete_user(username, password)
+    except Exception as e:
+        tui.notify(f'Error: {e}')
+        return user_options_screen 
+
+    if result == 0:
+        tui.notify(f'user {username} deleted')
     else:
         tui.notify(f'Error {result}')
 
@@ -92,7 +111,7 @@ def room_options_screen():
         's': room_search_screen,
         'l': user_options_screen,
         'q': lambda: None }
-    PROMPT = f'logged as {username}'
+    PROMPT = f'logged as {username}\n'
     PROMPT += '(c)reate room, (j)oin room, (s)earch room or (l)ogout: '
 
     screen = handle_options('Room Screen', PROMPT, OPTIONS)
@@ -102,7 +121,7 @@ def room_creation_screen():
     tui.clear()
     print('RPChat - Room creation')
 
-    result = 0
+    result = None
     roomname = input('roomname: ')
     if roomname == '':
         return room_screen
@@ -141,7 +160,31 @@ def room_search_screen():
 def room_screen():
     pass
 
+def parse_cli_args():
+    if len(sys.argv) < 3:
+        print('Expected host and port')
+        exit(1)
+    
+    try:
+        addr = sys.argv[1], int(sys.argv[2])
+        return addr
+    except Exception as e:
+        print(f'Error parsing arguments: {e}')
+        exit(2)
+
 def main():
+    binder_addr = parse_cli_args()
+
+    try:
+        binder = xmlrpc.client.ServerProxy(f'http://{binder_addr[0]}:{binder_addr[1]}')
+        server_addr = binder.find_service('rpchat')
+
+        global rpchat
+        rpchat = xmlrpc.client.ServerProxy(f'http://{server_addr[0]}:{server_addr[1]}')
+    except Exception as e:
+        print(f'Error connecting to binder: {e}')
+        exit(3)
+
     tui.init()
 
     try:

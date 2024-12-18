@@ -38,9 +38,10 @@ def main():
 
     try:
         server = SimpleXMLRPCServer((host, 0), logRequests=False, allow_none=True)
+        binder = xmlrpc.client.ServerProxy(f'http://{binder_addr[0]}:{binder_addr[1]}')
+        binder.register_service('rpchat', host, server.server_address[1])
     except Exception as e:
         print(f'Error creating server: {e}')
-        exit(3)
 
     server.register_function(functions.create_user, 'create_user')
     server.register_function(functions.delete_user, 'delete_user')
@@ -53,18 +54,9 @@ def main():
     server.register_function(functions.send_message, 'send_message')
     server.register_function(functions.receive_messages, 'receive_messages')
 
-    try:
-        binder = xmlrpc.client.ServerProxy(f'http://{binder_addr[0]}:{binder_addr[1]}')
-        binder.register_service('rpchat', host, server.server_address[1])
-    except Exception as e:
-        print(f'Error connecting to binder: {e}')
-        exit(4)
-
     print('Server ready')
 
     try:
         server.serve_forever()
     except KeyboardInterrupt:
         print('bye')
-    finally:
-        server.server_close()
