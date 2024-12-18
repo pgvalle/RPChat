@@ -18,11 +18,11 @@ def init():
     stdout.write('\x1b[?1049h\x1b[?47h')
     stdout.flush()
 
-def getkey(timeout=0.1):
+def getkey(timeout=0.002):
     if _is_windows:
         time.sleep(timeout)
         ch = msvcrt.getch()
-        return ch if ch else ''
+        return ch.decode() if ch else ''
     
     global selector
     events = _selector.select(timeout)
