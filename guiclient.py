@@ -3,6 +3,7 @@ import tkinter as tk
 from tkinter import ttk
 import tkinter.messagebox as msgbox
 
+
 binder = xmlrpc.client.ServerProxy(f'http://127.0.0.1:1234')
 host, port = binder.find_service('rpchat')
 
