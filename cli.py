@@ -1,23 +1,30 @@
 from sys import stdout, stdin
-import platform, selectors
+import platform
 
-_selector = selectors.DefaultSelector()
+_is_windows = platform.system() == 'Windows'
+_selector = None
 
-def init():
-    # enable ascii sequences in windows
-    if platform.system() == 'Windows':
-        import ctypes
-        kernel32 = ctypes.windll.kernel32
-        kernel32.SetConsoleMode(kernel32.GetStdHandle(-11), 7)
-
+if _is_windows:
+    # enable ascii sequences
+    import msvcrt, ctypes, time
+    kernel32 = ctypes.windll.kernel32
+    kernel32.SetConsoleMode(kernel32.GetStdHandle(-11), 7)
+else:
+    import selectors
+    _selector = selectors.DefaultSelector()
     _selector.register(stdin, selectors.EVENT_READ)
 
+def init():
     stdout.write('\x1b[?1049h\x1b[?47h')
     stdout.flush()
 
 def getkey(timeout=0.1):
+    if _is_windows:
+        time.sleep(timeout)
+        ch = msvcrt.getch()
+        return ch if ch else ''
+    
     global selector
-
     events = _selector.select(timeout)
     result = ''
     for key, _ in events:
