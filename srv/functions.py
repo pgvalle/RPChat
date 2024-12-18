@@ -129,7 +129,7 @@ def send_message(roomname, username, password, content, dest=None):
         return statcodes.USER_NOT_FOUND
     
     if dest and not dest in room.users:
-        return statcodes.RECIPIENT_NOT_FOUND
+        return statcodes.DEST_NOT_FOUND
 
     room.send_message(username, content, dest)
     return statcodes.SUCCESS
