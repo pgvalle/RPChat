@@ -1,58 +1,40 @@
 import xmlrpc.client
-from sys import stdout, stdin
+import cli
 
 rpchat = xmlrpc.client.ServerProxy(f'http://127.0.0.1:1444')
 
-def enable_vt100_on_windows():
-    '''Enable VT100 mode in Windows cmd if necessary.'''
-    import platform
-
-    if platform.system() == 'Windows':
-        try:
-            import ctypes
-            kernel32 = ctypes.windll.kernel32
-            kernel32.SetConsoleMode(kernel32.GetStdHandle(-11), 7)
-        except (ImportError, AttributeError):
-            pass
-
-def clear_screen():
-    stdout.write('\x1bc')
-    stdout.flush()
-
 def main_screen():
-    ACTIONS = {
+    SCREEN_FROM_ACTION = {
         'c': create_user_screen,
-        'l': 1,
-        'q': lambda: exit(0) }
+        'l': lambda: print('not done yet') }
+
+    PROMPT = '(c)reate new user, (l)ogin or press ctrl+c twice to quit: '
 
     while True:
-        try:
-            clear_screen()
-            act = input('(c)reate new user, (l)ogin or (q)uit: ').lower()
-            while not act in ACTIONS:
-                clear_screen()
-                print('Invalid action')
-                act = input('(c)reate new user, (l)ogin or (q)uit: ')
-            return ACTIONS[act]
-        except KeyboardInterrupt:
-            pass
-
+        cli.clear()
+        act = input(PROMPT).lower()
     
+        while not act in SCREEN_FROM_ACTION.keys():
+            cli.notify('Invalid action', stamp=1)
+            act = input(PROMPT).lower()
+        
+        screen = SCREEN_FROM_ACTION[act]
+        cli.execute(screen)
 
 def create_user_screen():
     while True:
-        try:
-            clear_screen()
-            print(f'Create username')
-            return get_credentials()
-        except KeyboardInterrupt:
-            pass
+        cli.clear()
+        print('User creation')
+        result = create_user()
+        if result == 0:
+            break
 
-def create_user(username, password):
+def create_user():
     try:
+        username, password = get_credentials()
         return rpchat.create_user(username, password)
     except:
-        return None
+        return -10
     
 def get_credentials():
     username = input('username: ')
@@ -62,13 +44,11 @@ def get_credentials():
 
 
 def main():
-    stdout.write('\x1b[?1049h\x1b[?47h')
-    stdout.flush()
+    cli.init()
 
-    
+    main_screen()
 
-    stdout.write('\x1b[?47l\x1b[?1049l')
-    stdout.flush()
+    cli.terminate()
 
     # USER = 'hello'
     # PASS = 'hello'
@@ -86,5 +66,5 @@ def main():
 
     # rpchat.leave_room('hallo')
 
-enable_vt100_on_windows()
-main()
+cli.execute(main)
+cli.terminate()
