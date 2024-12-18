@@ -1,9 +1,9 @@
 import xmlrpc.client
 
-#binder = xmlrpc.client.ServerProxy(f'http://127.0.0.1:1234')
-#host, port = binder.find_service('rpchat')
-#rpchat = xmlrpc.client.ServerProxy(f'http://{host}:{port}')
-binder, host, port, rpchat = None, None, None, None
+binder = xmlrpc.client.ServerProxy(f'http://127.0.0.1:1234')
+host, port = binder.find_service('rpchat')
+rpchat = xmlrpc.client.ServerProxy(f'http://{host}:{port}')
+
 import cli, getpass
 
 username, password = '', ''
@@ -12,14 +12,12 @@ def handle_options(title, prompt, options):
     cli.clear()
     print(title)
 
-    print(prompt)
-    opt = cli.getkey()
+    cli.printil(prompt)
+    opt = cli.getkey().lower()
 
-    while not opt in options:
-        cli.notify('Invalid option')
-        print(prompt)
-        opt = cli.getkey()
-        print(opt)
+    while not opt in options.keys():
+        print(len(opt))
+        opt = cli.getkey().lower()
 
     screen = options[opt]
     return screen
@@ -149,13 +147,6 @@ def main():
 
     cli.terminate()
 
-cli.init()
-b = ''
-try:
-    while True:
-        print(cli.getkey())
-except KeyboardInterrupt:
-    pass
-print(b)
+
 cli.terminate
-#main()
+main()

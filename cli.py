@@ -18,7 +18,11 @@ def init():
     stdout.write('\x1b[?1049h\x1b[?47h')
     stdout.flush()
 
-def getkey(timeout=0.002):
+def printil(text):
+    stdout.write(text)
+    stdout.flush()
+
+def getkey(timeout=0.01):
     if _is_windows:
         time.sleep(timeout)
         ch = msvcrt.getch()
@@ -29,7 +33,7 @@ def getkey(timeout=0.002):
     result = ''
     for key, _ in events:
         if key.fileobj == stdin:
-            result += key.data
+            result += str(key.data)
     return result
 
 def terminate():
