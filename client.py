@@ -1,13 +1,10 @@
 import xmlrpc.client
 
-binder = xmlrpc.client.ServerProxy(f'http://127.0.0.1:1234')
-host, port = binder.find_service('rpchat')
-rpchat = xmlrpc.client.ServerProxy(f'http://{host}:{port}')
-
-import cli, getpass, sys, selectors
-
-selector = selectors.DefaultSelector()
-selector.register(sys.stdin, selectors.EVENT_READ)
+#binder = xmlrpc.client.ServerProxy(f'http://127.0.0.1:1234')
+#host, port = binder.find_service('rpchat')
+#rpchat = xmlrpc.client.ServerProxy(f'http://{host}:{port}')
+binder, host, port, rpchat = None, None, None, None
+import cli, getpass
 
 username, password = '', ''
 
@@ -152,7 +149,13 @@ def main():
 
     cli.terminate()
 
-while True:
-    a=cli.getkey()
-    print(a)
-main()
+cli.init()
+b = ''
+try:
+    while True:
+        print(cli.getkey())
+except KeyboardInterrupt:
+    pass
+print(b)
+cli.terminate
+#main()
