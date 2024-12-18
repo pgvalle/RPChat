@@ -18,16 +18,14 @@ def init():
     stdout.write('\x1b[?1049h\x1b[?47h')
     stdout.flush()
 
-def printil(text):
-    stdout.write(text)
-    stdout.flush()
-
-def getkey(timeout=0.01):
+def getkey(timeout=0.002):
     if _is_windows:
         time.sleep(timeout)
-        ch = msvcrt.getch()
-        return ch.decode() if ch else ''
-    
+        if msvcrt.kbhit():
+            ch = msvcrt.getch()
+            return ch.decode()
+        return ''
+
     global selector
     events = _selector.select(timeout)
     result = ''
@@ -39,7 +37,6 @@ def getkey(timeout=0.01):
 def terminate():
     stdout.write('\x1b[?47l\x1b[?1049l')
     stdout.flush()
-    exit(0)
 
 def clear():
     stdout.write('\x1bc')

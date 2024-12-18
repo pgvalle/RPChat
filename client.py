@@ -1,26 +1,35 @@
 import xmlrpc.client
 
-binder = xmlrpc.client.ServerProxy(f'http://127.0.0.1:1234')
-host, port = binder.find_service('rpchat')
-rpchat = xmlrpc.client.ServerProxy(f'http://{host}:{port}')
-
-import cli, getpass
+# binder = xmlrpc.client.ServerProxy(f'http://127.0.0.1:1234')
+# host, port = binder.find_service('rpchat')
+# rpchat = xmlrpc.client.ServerProxy(f'http://{host}:{port}')
+binder =None
+host, port = None, None
+rpchat = None
+import tui, getpass
 
 username, password = '', ''
 
 def handle_options(title, prompt, options):
-    cli.clear()
-    print(title)
+    tui.clear()
+    print('RPChat - ' + title)
 
-    cli.printil(prompt)
-    opt = cli.getkey().lower()
+    print(prompt, end='', flush=True)
+    opt = tui.getkey().lower()
 
     while not opt in options.keys():
-        print(len(opt))
-        opt = cli.getkey().lower()
+        opt = tui.getkey().lower()
 
     screen = options[opt]
     return screen
+
+def get_credentials():
+    username = input('username: ')
+    if username == '':
+        return None, None
+
+    password = getpass.getpass('password: ')
+    return username, password
 
 def user_options_screen():
     OPTIONS = {
@@ -29,57 +38,50 @@ def user_options_screen():
         'q': lambda: None }
     PROMPT = '(c)reate user, (l)ogin or (q)uit: '
     
-    screen = handle_options('RPChat', PROMPT, OPTIONS)
+    screen = handle_options('User Options', PROMPT, OPTIONS)
     return screen
 
 def user_login_screen():
-    cli.clear()
-    print('User login')
+    tui.clear()
+    print('RPChat - User login')
 
     global username, password
-    username, password = '', ''
-
-    username = input('username: ')
-    if username == '':
+    username, password = get_credentials()
+    if not username:
         return user_options_screen
-    
-    password = getpass.getpass('password: ')
+
+    result = 0
 
     try:
         result = rpchat.check_user(username, password)        
-    except OSError as e:
-        cli.notify(f'OS Error: {e}')
-    except xmlrpc.client.Fault as e:
-        cli.notify(f'RPC Error: {e}')
+    except Exception as e:
+        tui.notify(f'Error: {e}')
 
     if result == 0:
         return room_options_screen()
     else:
-        cli.notify(f'Error {result}')
+        tui.notify(f'Error {result}')
 
     return user_options_screen
 
 def user_creation_screen():
-    cli.clear()
-    print('User creation')
-    
-    username = input('username: ')
-    if username == '':
-        return user_options_screen
+    tui.clear()
+    print('RPChat - User creation')
 
-    password = getpass.getpass('password: ')
+    result = 0
+    username, password = get_credentials()
+    if not username:
+        return user_options_screen
 
     try:
         result = rpchat.create_user(username, password)
-    except OSError as e:
-        cli.notify(f'OS Error: {e}')
-    except xmlrpc.client.Fault as e:
-        cli.notify(f'RPC Error: {e}')
+    except Exception as e:
+        tui.notify(f'Error: {e}')
 
     if result == 0:
-        cli.notify(f'user {username} created')
+        tui.notify(f'user {username} created')
     else:
-        cli.notify(f'Error {result}')
+        tui.notify(f'Error {result}')
 
     return user_options_screen
 
@@ -97,9 +99,10 @@ def room_options_screen():
     return screen
 
 def room_creation_screen():
-    cli.clear()
-    print('Room creation')
+    tui.clear()
+    print('RPChat - Room creation')
 
+    result = 0
     roomname = input('roomname: ')
     if roomname == '':
         return room_screen
@@ -107,27 +110,27 @@ def room_creation_screen():
     try:
         result = rpchat.create_room(roomname)
     except OSError as e:
-        cli.notify(f'OS Error: {e}')
+        tui.notify(f'OS Error: {e}')
     except xmlrpc.client.Fault as e:
-        cli.notify(f'RPC Error: {e}')
+        tui.notify(f'RPC Error: {e}')
 
     if result == 0:
-        cli.notify('room {roomname} created')
+        tui.notify('room {roomname} created')
     else:
-        cli.notify(f'Error {result}')
+        tui.notify(f'Error {result}')
 
     return room_screen
 
 def room_search_screen():
-    cli.clear()
-    print('Room search')
+    tui.clear()
+    print('RPChat - Room search')
     
     try:
         rooms = rpchat.list_rooms()
     except OSError as e:
-        cli.notify(f'OS Error: {e}')
+        tui.notify(f'OS Error: {e}')
     except xmlrpc.client.Fault as e:
-        cli.notify(f'RPC Error: {e}')
+        tui.notify(f'RPC Error: {e}')
 
     for room in rooms:
         print(room)
@@ -139,14 +142,15 @@ def room_screen():
     pass
 
 def main():
-    cli.init()
+    tui.init()
 
-    screen_function = user_options_screen
-    while screen_function:
-        screen_function = screen_function()
+    try:
+        screen_function = user_options_screen
+        while screen_function:
+            screen_function = screen_function()
+    except KeyboardInterrupt:
+        pass
 
-    cli.terminate()
+    tui.terminate()
 
-
-cli.terminate
 main()
