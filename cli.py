@@ -1,17 +1,40 @@
-from sys import stdout
+from sys import stdout, stdin
+import platform
+
+_is_windows = platform.system() == 'Windows'
+
+if _is_windows:
+    import msvcrt
+else:
+    import fcntl
 
 def init():
-    import platform
-    if platform.system() == 'Windows':
-        try:
-            import ctypes
-            kernel32 = ctypes.windll.kernel32
-            kernel32.SetConsoleMode(kernel32.GetStdHandle(-11), 7)
-        except (ImportError, AttributeError):
-            pass
+    if _is_windows:
+        import ctypes
+        # enable ascii sequences
+        kernel32 = ctypes.windll.kernel32
+        kernel32.SetConsoleMode(kernel32.GetStdHandle(-11), 7)
+    else:
+        import os
+        # unblock stdin
+        fd = stdin.fileno()
+        flags = fcntl.fcntl(fd, fcntl.F_GETFL)
+        fcntl.fcntl(fd, fcntl.F_SETFL, flags | os.O_NONBLOCK)
     
     stdout.write('\x1b[?1049h\x1b[?47h')
     stdout.flush()
+
+def getkey():
+    if _is_windows:
+        if msvcrt.kbhit():  # Check if input is available
+            return msvcrt.getch().decode()  # Return single character
+    else:
+        try:
+            return stdin.read()  # Read available input
+        except IOError:
+            pass
+    
+    return None
 
 def terminate():
     stdout.write('\x1b[?47l\x1b[?1049l')
@@ -25,19 +48,6 @@ def clear():
 def notify(text, timestamp=2):
     clear()
     print(text)
-
-    try:
-        import time
-        time.sleep(timestamp)
-    except KeyboardInterrupt:
-        pass
-    
+    import time
+    time.sleep(timestamp)    
     clear()
-
-def run_screen(function, out_function):
-    try:
-        return function()
-    except KeyboardInterrupt:
-        pass
-    
-    return out_function
