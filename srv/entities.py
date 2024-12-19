@@ -1,4 +1,4 @@
-import datetime
+import time
 
 class User:
 
@@ -19,8 +19,7 @@ class Room:
         self.users = {}
 
     def send_message(self, orig, content, dest):
-        now = datetime.datetime.now()
-        self.messages.insert(0, (now, orig, content, dest))
+        self.messages.insert(0, (time.time(), orig, content, dest))
 
     def update_inactivity(self, seconds):
         if self.name == 'world' or len(self.room.users) > 0:

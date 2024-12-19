@@ -75,15 +75,11 @@ def join_room(roomname, username, password):
         return statcodes.INVALID_CREDENTIALS
 
     if username in room.users:
-        now = datetime.datetime.now()
-
-        user.rooms[roomname] = room, now
+        user.rooms[roomname] = room, time.time()
         print(f'user {username} rejoined {roomname}')
     else:
-        epoch = datetime.datetime.fromtimestamp(0)
-
         room.users[username] = user
-        user.rooms[roomname] = room, epoch
+        user.rooms[roomname] = room, 0
         print(f'user {username} joined {roomname}')
 
     users_in_room = list(room.users.keys())
@@ -159,4 +155,5 @@ def receive_messages(roomname, username, password):
         if not dest or dest == username:  # only messages to this user or public ones
             last_messages.insert(0, message)
 
+    user.rooms[roomname] = room, time.time()
     return last_messages
