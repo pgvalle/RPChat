@@ -9,9 +9,10 @@ if _is_windows:
     kernel32 = ctypes.windll.kernel32
     kernel32.SetConsoleMode(kernel32.GetStdHandle(-11), 7)
 else:
-    import os
+    import os, fcntl
     fd = stdin.fileno()
-    os.set_blocking(fd, False)
+    flags = fcntl.fcntl(fd, fcntl.F_GETFL)
+    fcntl.fcntl(fd, fcntl.F_SETFL, flags | os.O_NONBLOCK)
 
 def init():
     stdout.write('\x1b[?1049h\x1b[?47h')
@@ -28,10 +29,7 @@ def getkey():
         
     return ''
 
-def terminate():
-    fd = stdin.fileno()
-    os.set_blocking(fd, False)
-    
+def terminate():    
     stdout.write('\x1b[?47l\x1b[?1049l')
     stdout.flush()
     exit(0)
