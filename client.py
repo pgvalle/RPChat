@@ -201,12 +201,11 @@ def room_screen():
 
     buffer = ''
     while not evt.is_set():
-        a = ''
         with lock:
-            print(f'\x1b[1;0H\x1b[K', end='')
+            print('\x1b[1;0H\x1b[K', end='')
             print(buffer, end='', flush=True)
-            a = tui.getkey()
 
+        a = tui.getkey()
         if a == '\r':
             rpchat.send_message(roomname, username, password, buffer)
             buffer = ''
@@ -215,7 +214,6 @@ def room_screen():
 
     evt.set()
     th.join()
-
 
 def parse_cli_args():
     if len(sys.argv) < 3:

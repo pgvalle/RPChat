@@ -2,9 +2,6 @@ from sys import stdout, stdin
 import platform
 
 _is_windows = platform.system() == 'Windows'
-_selector = None
-
-
 
 if _is_windows:
     # enable ascii sequences
@@ -12,11 +9,7 @@ if _is_windows:
     kernel32 = ctypes.windll.kernel32
     kernel32.SetConsoleMode(kernel32.GetStdHandle(-11), 7)
 else:
-    import selectors, os
-    fd = stdin.fileno()
-    os.set_blocking(fd, False)
-    _selector = selectors.DefaultSelector()
-    _selector.register(fd, selectors.EVENT_READ)
+    import termios, tty
 
 def init():
     stdout.write('\x1b[?1049h\x1b[?47h')
@@ -28,9 +21,14 @@ def getkey():
         return ch.decode()
     
     if not _is_windows:
-        events = _selector.select()
-        for key, _ in events:
-            return stdin.read(1)
+        fd = stdin.fileno()
+        flags = termios.tcgetattr(fd)
+        try:
+            tty.setraw(fd)
+            ch = stdin.read(1)
+        finally:
+            termios.tcsetattr(fd, termios.TCSADRAIN, flags)
+        return ch
         
     return ''
 
