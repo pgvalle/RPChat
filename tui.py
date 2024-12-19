@@ -13,8 +13,8 @@ if _is_windows:
     kernel32.SetConsoleMode(kernel32.GetStdHandle(-11), 7)
 else:
     import selectors
-    selector = selectors.DefaultSelector()
-    stdin_key = _selector.register(stdin, selectors.EVENT_READ)
+    _selector = selectors.DefaultSelector()
+    _selector.register(stdin, selectors.EVENT_READ)
 
 def init():
     stdout.write('\x1b[?1049h\x1b[?47h')
@@ -26,7 +26,7 @@ def getkey():
         return ch.decode()
     
     if not _is_windows:
-        events = selector.select()
+        events = _selector.select()
         for key, mask in events:
             if key.fileobj is stdin:
                 return key.data
