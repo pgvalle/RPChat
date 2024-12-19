@@ -2,6 +2,7 @@ from sys import stdout, stdin
 import platform
 
 _is_windows = platform.system() == 'Windows'
+_stdin_fd = stdin.fileno()
 
 if _is_windows:
     # enable ascii sequences
@@ -21,22 +22,17 @@ def getkey():
         return ch.decode()
     
     if not _is_windows:
-        fd = stdin.fileno()
-        flags = termios.tcgetattr(fd)
+        flags = termios.tcgetattr(_stdin_fd)
         try:
-            tty.setraw(fd)
+            tty.setcbreak(_stdin_fd)
             ch = stdin.read(1)
         finally:
-            termios.tcsetattr(fd, termios.TCSADRAIN, flags)
+            termios.tcsetattr(_stdin_fd, termios.TCSADRAIN, flags)
         return ch
         
     return ''
 
 def terminate():
-    if not _is_windows:
-        fd = stdin.fileno()
-        os.set_blocking(fd, False)
-
     stdout.write('\x1b[?47l\x1b[?1049l')
     stdout.flush()
     exit(0)

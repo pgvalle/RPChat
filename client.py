@@ -190,9 +190,10 @@ def room_screen():
             messages += rpchat.receive_messages(roomname, username, password)
 
             with lock:
-                print('\x1b[2;0H\x1b[J\n', end='', flush=True)
+                print('\x1b[3;1H\x1b[J', end='')
                 for date, orig, content, dest in messages:
                     print(f'[{date}][{orig}]: {content}')
+                print('\x1b[2;1H', end='', flush=True)
 
             time.sleep(1)
     
@@ -201,14 +202,19 @@ def room_screen():
 
     buffer = ''
     while not evt.is_set():
+        a = ''
         with lock:
-            print('\x1b[1;0H\x1b[K', end='')
+            print('\x1b[1;1H', end='')
+            print(f'RPChat - {roomname}', flush=True)
+            print('\x1b[2;1H\x1b[K', end='')
             print(buffer, end='', flush=True)
-
+        
         a = tui.getkey()
-        if a == '\r':
+        if a == '\n':
             rpchat.send_message(roomname, username, password, buffer)
             buffer = ''
+        elif a != '' and ord(a) == 127:
+            buffer = buffer[::-2]
         else:
             buffer += a
 
