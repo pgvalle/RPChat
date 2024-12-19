@@ -24,12 +24,15 @@ def getkey():
         return ch.decode()
     
     if not _is_windows:
-        line = stdin.read().strip()
-        return line
+        try:
+            line = stdin.read().strip()
+            return line
+        except:
+            pass
         
     return ''
 
-def terminate():    
+def terminate():
     stdout.write('\x1b[?47l\x1b[?1049l')
     stdout.flush()
     exit(0)
