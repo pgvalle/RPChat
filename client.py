@@ -246,7 +246,7 @@ def main():
         global rpchat
         rpchat = xmlrpc.client.ServerProxy(f'http://{server_addr[0]}:{server_addr[1]}')
     except Exception as e:
-        print(f'Error connecting to binder: {e}')
+        print(f'Error connecting to rpchat: {e}')
         exit(3)
 
     tui.init()

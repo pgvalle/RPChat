@@ -35,7 +35,6 @@ def getkey():
 def terminate():
     stdout.write('\x1b[?47l\x1b[?1049l')
     stdout.flush()
-    exit(0)
 
 def clear():
     stdout.write('\x1bc')
