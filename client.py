@@ -178,6 +178,7 @@ def room_join_screen():
 def room_screen():
     tui.clear()
     global roomname
+    print(f'RPChat - {roomname}')
 
     import threading, time
     evt = threading.Event()
@@ -186,15 +187,14 @@ def room_screen():
     def get_messages():
         global messages
         while not evt.is_set():
-            time.sleep(1)
             messages += rpchat.receive_messages(roomname, username, password)
-            
+
             with lock:
-                print('\x1b[1;0H\x1b[J\n', end='', flush=True)
+                print('\x1b[2;0H\x1b[J\n', end='', flush=True)
                 for date, orig, content, dest in messages:
                     print(f'[{date}][{orig}]: {content}')
 
-        evt.set()
+            time.sleep(1)
     
     th = threading.Thread(target=get_messages, daemon=True)
     th.start()
@@ -203,7 +203,7 @@ def room_screen():
     while not evt.is_set():
         a = ''
         with lock:
-            print(f'\x1b[0;0H\x1b[2K', end='')
+            print(f'\x1b[1;0H\x1b[K', end='')
             print(buffer, end='', flush=True)
             a = tui.getkey()
 
