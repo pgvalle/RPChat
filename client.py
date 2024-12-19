@@ -3,19 +3,15 @@ import tui, getpass
 
 rpchat = None
 username, password = '', ''
+roomname = ''
+users, messages = [], []
 
-def handle_options(title, prompt, options):
-    tui.clear()
-    print('RPChat - ' + title)
-
-    print(prompt, end='', flush=True)
+def get_option(options):
     opt = tui.getkey().lower()
-
-    while not opt in options.keys():
+    while not opt in options:
         opt = tui.getkey().lower()
-
-    screen = options[opt]
-    return screen
+    
+    return opt
 
 def get_credentials():
     username = input('username: ')
@@ -25,6 +21,16 @@ def get_credentials():
     password = getpass.getpass('password: ')
     return username, password
 
+def handle_screen_options(title, prompt, options):
+    tui.clear()
+    print('RPChat - ' + title)
+
+    print(prompt, end='', flush=True)
+    opt = get_option(options.keys())
+
+    screen = options[opt]
+    return screen, opt
+
 def user_options_screen():
     OPTIONS = {
         'c': user_creation_screen,
@@ -33,7 +39,7 @@ def user_options_screen():
         'q': lambda: None }
     PROMPT = '(c)reate user, (d)elete user, (l)ogin or (q)uit: '
     
-    screen = handle_options('User Options', PROMPT, OPTIONS)
+    screen, opt = handle_screen_options('User Options', PROMPT, OPTIONS)
     return screen
 
 def user_login_screen():
@@ -45,9 +51,8 @@ def user_login_screen():
     if not username:
         return user_options_screen
 
-    result = None
-
     try:
+        result = None
         result = rpchat.check_user(username, password)        
     except Exception as e:
         tui.notify(f'Error: {e}')
@@ -64,12 +69,12 @@ def user_creation_screen():
     tui.clear()
     print('RPChat - Create user')
 
-    result = None
     username, password = get_credentials()
     if not username:
         return user_options_screen
 
     try:
+        result = None
         result = rpchat.create_user(username, password)
     except Exception as e:
         tui.notify(f'Error: {e}')
@@ -86,16 +91,16 @@ def user_deletion_screen():
     tui.clear()
     print('RPChat - Delete user')
 
-    result = None
     username, password = get_credentials()
     if not username:
         return user_options_screen
 
     try:
+        result = None
         result = rpchat.delete_user(username, password)
     except Exception as e:
         tui.notify(f'Error: {e}')
-        return user_options_screen 
+        return user_options_screen
 
     if result == 0:
         tui.notify(f'user {username} deleted')
@@ -107,58 +112,110 @@ def user_deletion_screen():
 def room_options_screen():
     OPTIONS = {
         'c': room_creation_screen,
-        'j': room_screen,
-        's': room_search_screen,
+        'j': room_join_screen,
         'l': user_options_screen,
         'q': lambda: None }
     PROMPT = f'logged as {username}\n'
-    PROMPT += '(c)reate room, (j)oin room, (s)earch room or (l)ogout: '
+    PROMPT += '(c)reate room, (j)oin room or (l)ogout: '
 
-    screen = handle_options('Room Screen', PROMPT, OPTIONS)
+    screen, opt = handle_screen_options('Room Screen', PROMPT, OPTIONS)
     return screen
 
 def room_creation_screen():
     tui.clear()
-    print('RPChat - Room creation')
+    print('RPChat - Create Room')
 
-    result = None
+    global roomname
     roomname = input('roomname: ')
     if roomname == '':
-        return room_screen
+        return room_options_screen
 
     try:
+        result = None
         result = rpchat.create_room(roomname)
-    except OSError as e:
-        tui.notify(f'OS Error: {e}')
-    except xmlrpc.client.Fault as e:
-        tui.notify(f'RPC Error: {e}')
+    except Exception as e:
+        tui.notify(f'Error: {e}')
+        return room_options_screen
 
     if result == 0:
-        tui.notify('room {roomname} created')
+        print('join? [y/n]: ', end='', flush=True)
+        opt = get_option(['y', 'n', 'yes', 'no'])
+
+        if opt in ['y', 'yes']:
+            return room_join_screen
     else:
         tui.notify(f'Error {result}')
 
-    return room_screen
-
-def room_search_screen():
-    tui.clear()
-    print('RPChat - Room search')
-    
-    try:
-        rooms = rpchat.list_rooms()
-    except OSError as e:
-        tui.notify(f'OS Error: {e}')
-    except xmlrpc.client.Fault as e:
-        tui.notify(f'RPC Error: {e}')
-
-    for room in rooms:
-        print(room)
-    
-    input('press enter to go back')
     return room_options_screen
 
+def room_join_screen():
+    tui.clear()
+    print('RPChat - Join Room')
+
+    global roomname
+    if roomname == '':
+        roomname = input('roomname: ')
+        if roomname == '':
+            return room_options_screen
+    else:
+        print(f'roomname: {roomname}')
+    
+    try:
+        result = None
+        result = rpchat.join_room(roomname, username, password)
+    except Exception as e:
+        tui.notify(f'Error: {e}')
+        return user_options_screen
+
+    if isinstance(result, int):
+        tui.notify(f'Error {result}')
+        return room_options_screen
+
+    global users, messages
+    users, messages = result
+    return room_screen
+
 def room_screen():
-    pass
+    tui.clear()
+    global roomname
+
+    import threading, time
+    evt = threading.Event()
+    lock = threading.Lock()
+
+    def get_messages():
+        global messages
+        while not evt.is_set():
+            time.sleep(1)
+            messages += rpchat.receive_messages(roomname, username, password)
+            
+            with lock:
+                print('\x1b[1;0H\x1b[J\n', end='', flush=True)
+                for date, orig, content, dest in messages:
+                    print(f'[{date}][{orig}]: {content}')
+
+        evt.set()
+    
+    th = threading.Thread(target=get_messages, daemon=True)
+    th.start()
+
+    buffer = ''
+    while not evt.is_set():
+        a = ''
+        with lock:
+            print(f'\x1b[0;0H\x1b[2K', end='')
+            print(buffer, end='', flush=True)
+            a = tui.getkey()
+
+        if a == '\r':
+            rpchat.send_message(roomname, username, password, buffer)
+            buffer = ''
+        else:
+            buffer += a
+
+    evt.set()
+    th.join()
+
 
 def parse_cli_args():
     if len(sys.argv) < 3:

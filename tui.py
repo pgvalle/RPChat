@@ -18,7 +18,7 @@ def init():
     stdout.write('\x1b[?1049h\x1b[?47h')
     stdout.flush()
 
-def getkey(timeout=0.002):
+def getkey(timeout=0.01):
     if _is_windows:
         time.sleep(timeout)
         if msvcrt.kbhit():
