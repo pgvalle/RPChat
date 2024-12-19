@@ -2,6 +2,9 @@ from sys import stdout, stdin
 import platform
 
 _is_windows = platform.system() == 'Windows'
+_selector = None
+
+
 
 if _is_windows:
     # enable ascii sequences
@@ -9,10 +12,9 @@ if _is_windows:
     kernel32 = ctypes.windll.kernel32
     kernel32.SetConsoleMode(kernel32.GetStdHandle(-11), 7)
 else:
-    import os, fcntl
-    fd = stdin.fileno()
-    flags = fcntl.fcntl(fd, fcntl.F_GETFL)
-    fcntl.fcntl(fd, fcntl.F_SETFL, flags | os.O_NONBLOCK)
+    import selectors
+    selector = selectors.DefaultSelector()
+    stdin_key = _selector.register(stdin, selectors.EVENT_READ)
 
 def init():
     stdout.write('\x1b[?1049h\x1b[?47h')
@@ -24,11 +26,10 @@ def getkey():
         return ch.decode()
     
     if not _is_windows:
-        try:
-            line = stdin.read().strip()
-            return line
-        except:
-            pass
+        events = selector.select()
+        for key, mask in events:
+            if key.fileobj is stdin:
+                return key.data
         
     return ''
 
